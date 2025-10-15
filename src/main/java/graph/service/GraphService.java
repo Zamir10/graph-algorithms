@@ -1,43 +1,63 @@
-package graph;
+package graph.service;
 
+import graph.data.DirectedGraph;
+import graph.data.DirectedWeightedGraph;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
+import org.springframework.stereotype.Service;
 
-public class DirectedWeightedGraph {
+@Service
+public class GraphService {
 
-  private final Map<Integer, List<List<Integer>>> adjacency = new HashMap<>();
+  public boolean cyclic(DirectedGraph graph) {
 
-  public DirectedWeightedGraph(int[][] edges) {
-    for (int[] edge : edges) {
-      int u = edge[0];
-      int v = edge[1];
-      int weight = edge[2];
+    Map<Integer, Integer> visit = new HashMap<>();
 
-      List<Integer> e1 = new ArrayList<>();
-      e1.add(v);
-      e1.add(weight);
-      adjacency.computeIfAbsent(u, k -> new ArrayList<>()).add(e1);
-
-      List<Integer> e2 = new ArrayList<>();
-      e2.add(u);
-      e2.add(weight);
-      adjacency.computeIfAbsent(v, k -> new ArrayList<>()).add(e2);
+    for (Entry<Integer, List<Integer>> entry : graph.getAdjacency().entrySet()) {
+      visit.put(entry.getKey(), 0);
     }
+
+    for (int node : graph.getAdjacency().keySet()) {
+      if (hasCycle(graph.getAdjacency(), visit, node)) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  public int[] dijkstra(int source, int destination) {
+  private boolean hasCycle(Map<Integer, List<Integer>> adjacency, Map<Integer, Integer> visit,
+      int node) {
+    if (adjacency.containsKey(node)) {
+      visit.replace(node, 2);
+      for (int n : adjacency.get(node)) {
+        if (visit.containsKey(n)) {
+          if (visit.get(n) == 2) {
+            return true;
+          }
+          if (visit.get(n) == 0 && hasCycle(adjacency, visit, n)) {
+            return true;
+          }
+        }
+      }
+    }
+    visit.replace(node, 1);
+    return false;
+  }
+
+  public int[] dijkstra(DirectedWeightedGraph graph, int source, int destination) {
+
     PriorityQueue<List<Integer>> pq =
         new PriorityQueue<>(Comparator.comparing(k -> k.get(0)));
 
-    int[] distances = new int[adjacency.size()];
+    int[] distances = new int[graph.getAdjacency().size()];
     Arrays.fill(distances, Integer.MAX_VALUE);
 
     distances[source - 1] = 0;
@@ -52,7 +72,7 @@ public class DirectedWeightedGraph {
       List<Integer> current = pq.poll();
       int edge = current.get(1);
 
-      for (List<Integer> neighbor : adjacency.get(edge)) {
+      for (List<Integer> neighbor : graph.getAdjacency().get(edge)) {
         int n = neighbor.get(0);
         int weight = neighbor.get(1);
         if (distances[n - 1] > distances[edge - 1] + weight) {

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -58,7 +59,7 @@ public class DirectedWeightedGraph {
           distances[n - 1] = distances[edge - 1] + weight;
 
           Set<Integer> path = paths.get(edge);
-          paths.computeIfAbsent(n, k -> new HashSet<>());
+          paths.computeIfAbsent(n, k -> new LinkedHashSet<>());
           if (path != null) {
             paths.get(n).addAll(path);
           }
@@ -72,6 +73,8 @@ public class DirectedWeightedGraph {
       }
     }
 
-    return distances;
+    Set<Integer> shortest = paths.get(destination);
+    shortest.add(destination);
+    return shortest.stream().mapToInt(Integer::intValue).toArray();
   }
 }

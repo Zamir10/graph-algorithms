@@ -74,7 +74,9 @@ public class DirectedWeightedGraph {
     }
 
     Set<Integer> shortest = paths.get(destination);
-    shortest.add(destination);
-    return shortest.stream().mapToInt(Integer::intValue).toArray();
+    if (shortest != null) {
+      shortest.add(destination);
+    }
+    return shortest == null ? null : shortest.stream().mapToInt(Integer::intValue).toArray();
   }
 }
